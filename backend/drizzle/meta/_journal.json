@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1787037707966,
+      "tag": "0000_special_iron_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1787038920048,
+      "tag": "0001_goofy_may_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787051472851,
+      "tag": "0002_empty_lyja",
+      "breakpoints": true
+    }
+  ]
+}
