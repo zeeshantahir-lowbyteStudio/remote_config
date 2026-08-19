@@ -9,10 +9,23 @@ const users = mysqlTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-const environments = mysqlTable("environments", {
+const projects = mysqlTable("projects", {
   id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 100 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
+
+const environments = mysqlTable(
+  "environments",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    projectId: int("project_id").notNull().references(() => projects.id),
+  },
+  (table) => ({
+    nameProjectUnique: uniqueIndex("env_name_project_idx").on(table.name, table.projectId),
+  })
+);
 
 const apps = mysqlTable("apps", {
   id: int("id").autoincrement().primaryKey(),
@@ -94,7 +107,7 @@ const auditLog = mysqlTable("audit_log", {
 });
 
 module.exports = {
-  users, environments, apps, configKeys, configValues, conditions,
+  users, projects, environments, apps, configKeys, configValues, conditions,
   configKeyConditions, experiments, experimentVariants, experimentEvents,
   publishHistory, auditLog,
 };

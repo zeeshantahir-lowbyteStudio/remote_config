@@ -1,4 +1,4 @@
-const API_BASE = ""; // same-origin — Vite proxy forwards to backend
+const API_BASE = "http://localhost:5000";
 
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("rc_token");

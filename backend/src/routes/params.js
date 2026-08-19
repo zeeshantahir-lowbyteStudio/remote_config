@@ -1,17 +1,30 @@
 const express = require("express");
 const { eq, and } = require("drizzle-orm");
 const { db } = require("../db");
-const { configKeys, configValues, environments, auditLog } = require("../db/schema");
+const { configKeys, configValues, environments, projects, auditLog } = require("../db/schema");
 const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/", requireAuth, async (req, res) => {
-  const { environment } = req.query;
-  if (!environment) return res.status(400).json({ error: "environment query param is required" });
+async function resolveEnvironment(projectName, environmentName) {
+  const [proj] = await db.select().from(projects).where(eq(projects.name, projectName));
+  if (!proj) return null;
 
-  const [env] = await db.select().from(environments).where(eq(environments.name, environment));
-  if (!env) return res.status(404).json({ error: "Environment not found" });
+  const [env] = await db
+    .select()
+    .from(environments)
+    .where(and(eq(environments.name, environmentName), eq(environments.projectId, proj.id)));
+  return env || null;
+}
+
+router.get("/", requireAuth, async (req, res) => {
+  const { project, environment } = req.query;
+  if (!project || !environment) {
+    return res.status(400).json({ error: "project and environment query params are required" });
+  }
+
+  const env = await resolveEnvironment(project, environment);
+  if (!env) return res.status(404).json({ error: "Environment not found for this project" });
 
   const rows = await db
     .select({
@@ -31,13 +44,18 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 router.post("/", requireAuth, requireRole("editor"), async (req, res) => {
-  const { key, type, defaultValue, environment } = req.body;
-  if (!key || !type || !environment) return res.status(400).json({ error: "key, type, environment required" });
+  const { key, type, defaultValue, project, environment } = req.body;
+  if (!key || !type || !project || !environment) {
+    return res.status(400).json({ error: "key, type, project, environment required" });
+  }
 
-  const [env] = await db.select().from(environments).where(eq(environments.name, environment));
-  if (!env) return res.status(404).json({ error: "Environment not found" });
+  const env = await resolveEnvironment(project, environment);
+  if (!env) return res.status(404).json({ error: "Environment not found for this project" });
 
-  const existing = await db.select().from(configKeys).where(and(eq(configKeys.key, key), eq(configKeys.environmentId, env.id)));
+  const existing = await db
+    .select()
+    .from(configKeys)
+    .where(and(eq(configKeys.key, key), eq(configKeys.environmentId, env.id)));
   if (existing.length > 0) return res.status(409).json({ error: "Parameter already exists in this environment" });
 
   const [keyResult] = await db.insert(configKeys).values({ key, type, environmentId: env.id });
@@ -47,7 +65,7 @@ router.post("/", requireAuth, requireRole("editor"), async (req, res) => {
     publishedValue: null,
     hasDraftChange: true,
   });
-  await db.insert(auditLog).values({ userId: req.user.id, action: "Created parameter", target: key });
+  await db.insert(auditLog).values({ userId: req.user.id, action: "Created parameter", target: `${project}/${key}` });
 
   res.status(201).json({ id: keyResult.insertId, key, type, defaultValue });
 });

@@ -4,6 +4,8 @@ import { apiFetch } from "../lib/api";
 export const ConfigContext = createContext(null);
 
 export function ConfigProvider({ children }) {
+  const [projects, setProjects] = useState([]);
+  const [currentProject, setCurrentProject] = useState("");
   const [environments, setEnvironments] = useState([]);
   const [currentEnv, setCurrentEnv] = useState("dev");
   const [params, setParams] = useState([]);
@@ -15,13 +17,23 @@ export function ConfigProvider({ children }) {
   const [hasDraftChanges, setHasDraftChanges] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const loadProjects = useCallback(async () => {
+    const data = await apiFetch("/api/projects");
+    if (Array.isArray(data)) {
+      setProjects(data.map((p) => p.name));
+      if (!currentProject && data.length > 0) setCurrentProject(data[0].name);
+    }
+  }, [currentProject]);
+
   const loadEnvironments = useCallback(async () => {
-    const data = await apiFetch("/api/environments");
+    if (!currentProject) return;
+    const data = await apiFetch(`/api/environments?project=${currentProject}`);
     if (Array.isArray(data)) setEnvironments(data.map((e) => e.name));
-  }, []);
+  }, [currentProject]);
 
   const loadParams = useCallback(async () => {
-    const data = await apiFetch(`/api/params?environment=${currentEnv}`);
+    if (!currentProject) return;
+    const data = await apiFetch(`/api/params?project=${currentProject}&environment=${currentEnv}`);
     if (Array.isArray(data)) {
       setParams(data);
       setHasDraftChanges(data.some((p) => p.hasDraftChange));
@@ -29,12 +41,13 @@ export function ConfigProvider({ children }) {
       setParams([]);
       setHasDraftChanges(false);
     }
-  }, [currentEnv]);
+  }, [currentProject, currentEnv]);
 
   const loadConditions = useCallback(async () => {
-    const data = await apiFetch(`/api/conditions?environment=${currentEnv}`);
+    if (!currentProject) return;
+    const data = await apiFetch(`/api/conditions?project=${currentProject}&environment=${currentEnv}`);
     setConditions(Array.isArray(data) ? data : []);
-  }, [currentEnv]);
+  }, [currentProject, currentEnv]);
 
   const loadApps = useCallback(async () => {
     const data = await apiFetch("/api/apps");
@@ -58,10 +71,9 @@ export function ConfigProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("rc_token");
-    if (!token) return; // no token yet (e.g. on /login) — skip all API calls
-
+    if (!token) return;
     setLoading(true);
-    Promise.all([loadEnvironments(), loadApps(), loadExperiments(), loadHistory(), loadAuditLog()]).finally(() =>
+    Promise.all([loadProjects(), loadApps(), loadExperiments(), loadHistory(), loadAuditLog()]).finally(() =>
       setLoading(false)
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,26 +81,34 @@ export function ConfigProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("rc_token");
-    if (!token) return;
+    if (!token || !currentProject) return;
+    loadEnvironments();
+  }, [currentProject, loadEnvironments]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("rc_token");
+    if (!token || !currentProject) return;
     loadParams();
     loadConditions();
-  }, [currentEnv, loadParams, loadConditions]);
+  }, [currentProject, currentEnv, loadParams, loadConditions]);
+
+  async function addProject(name) {
+    await apiFetch("/api/projects", { method: "POST", body: JSON.stringify({ name }) });
+    await loadProjects();
+    await loadAuditLog();
+  }
 
   async function addParam(data) {
     await apiFetch("/api/params", {
       method: "POST",
-      body: JSON.stringify({ ...data, environment: currentEnv }),
+      body: JSON.stringify({ ...data, project: currentProject, environment: currentEnv }),
     });
     await loadParams();
     await loadAuditLog();
   }
 
   async function updateParam(id, data) {
-    await apiFetch(`/api/params/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    await apiFetch(`/api/params/${id}`, { method: "PUT", body: JSON.stringify(data) });
     await loadParams();
     await loadAuditLog();
   }
@@ -102,17 +122,14 @@ export function ConfigProvider({ children }) {
   async function addCondition(data) {
     await apiFetch("/api/conditions", {
       method: "POST",
-      body: JSON.stringify({ ...data, environment: currentEnv }),
+      body: JSON.stringify({ ...data, project: currentProject, environment: currentEnv }),
     });
     await loadConditions();
     await loadAuditLog();
   }
 
   async function updateCondition(id, data) {
-    await apiFetch(`/api/conditions/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    await apiFetch(`/api/conditions/${id}`, { method: "PUT", body: JSON.stringify(data) });
     await loadConditions();
     await loadAuditLog();
   }
@@ -126,14 +143,14 @@ export function ConfigProvider({ children }) {
   async function addEnvironment(name) {
     await apiFetch("/api/environments", {
       method: "POST",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, project: currentProject }),
     });
     await loadEnvironments();
     await loadAuditLog();
   }
 
   async function deleteEnvironment(name) {
-    const list = await apiFetch("/api/environments");
+    const list = await apiFetch(`/api/environments?project=${currentProject}`);
     const match = Array.isArray(list) ? list.find((e) => e.name === name) : null;
     if (!match) return;
     await apiFetch(`/api/environments/${match.id}`, { method: "DELETE" });
@@ -142,13 +159,13 @@ export function ConfigProvider({ children }) {
   }
 
   async function addApp(data) {
-    await apiFetch("/api/apps", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    await loadApps();
-    await loadAuditLog();
-  }
+  await apiFetch("/api/apps", {
+    method: "POST",
+    body: JSON.stringify({ ...data, project: currentProject, environment: currentEnv }),
+  });
+  await loadApps();
+  await loadAuditLog();
+}
 
   async function regenerateAppKey(id) {
     await apiFetch(`/api/apps/${id}/regenerate-key`, { method: "POST" });
@@ -162,20 +179,17 @@ export function ConfigProvider({ children }) {
     await loadAuditLog();
   }
 
-  async function addExperiment(data) {
-    await apiFetch("/api/experiments", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    await loadExperiments();
-    await loadAuditLog();
-  }
+async function addExperiment(data) {
+  await apiFetch("/api/experiments", {
+    method: "POST",
+    body: JSON.stringify({ ...data, project: currentProject, environment: currentEnv }),
+  });
+  await loadExperiments();
+  await loadAuditLog();
+}
 
   async function setExperimentStatus(id, status) {
-    await apiFetch(`/api/experiments/${id}/status`, {
-      method: "POST",
-      body: JSON.stringify({ status }),
-    });
+    await apiFetch(`/api/experiments/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
     await loadExperiments();
     await loadAuditLog();
   }
@@ -183,7 +197,7 @@ export function ConfigProvider({ children }) {
   async function publishChanges(summary) {
     await apiFetch("/api/history/publish", {
       method: "POST",
-      body: JSON.stringify({ environment: currentEnv, summary }),
+      body: JSON.stringify({ project: currentProject, environment: currentEnv, summary }),
     });
     await loadParams();
     await loadHistory();
@@ -191,6 +205,7 @@ export function ConfigProvider({ children }) {
   }
 
   const value = {
+    projects, currentProject, setCurrentProject, addProject,
     environments, currentEnv, setCurrentEnv,
     params, conditions, apps, experiments, history, auditLog,
     hasDraftChanges, loading,

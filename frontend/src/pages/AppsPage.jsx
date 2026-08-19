@@ -3,12 +3,11 @@ import { useConfig } from "../context/useConfig";
 import { hasRole } from "../lib/roles";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
-import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
 
 export default function AppsPage({ user }) {
-  const { apps, environments, addApp, regenerateAppKey, deleteApp } = useConfig();
+  const { apps, addApp, regenerateAppKey, deleteApp } = useConfig();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState({});
   const canManage = hasRole(user, "publisher");
@@ -43,6 +42,9 @@ export default function AppsPage({ user }) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+        {apps.length === 0 && (
+          <div className="px-4 py-10 text-center text-gray-400 text-sm">No apps yet</div>
+        )}
         {apps.map((app) => (
           <div key={app.id} className="px-4 py-3 flex items-center justify-between">
             <div>
@@ -72,29 +74,26 @@ export default function AppsPage({ user }) {
       </div>
 
       {isModalOpen && (
-        <AppModal environments={environments} onClose={() => setIsModalOpen(false)} onSave={handleAdd} />
+        <AppModal onClose={() => setIsModalOpen(false)} onSave={handleAdd} />
       )}
     </div>
   );
 }
 
-function AppModal({ environments, onClose, onSave }) {
+function AppModal({ onClose, onSave }) {
   const [name, setName] = useState("");
-  const [environment, setEnvironment] = useState(environments[0] || "");
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return;
-    onSave({ name, environment });
+    onSave({ name });
   }
 
   return (
     <Modal title="Add app" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="App name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mobile App" required />
-        <Select label="Environment" value={environment} onChange={(e) => setEnvironment(e.target.value)}>
-          {environments.map((env) => <option key={env} value={env}>{env}</option>)}
-        </Select>
+        <p className="text-xs text-gray-500">Created in the currently selected project + environment.</p>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit">Create & generate key</Button>

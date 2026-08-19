@@ -17,6 +17,7 @@ app.use("/api/history", require("./routes/history"));
 app.use("/api/audit-log", require("./routes/auditLog"));
 app.use("/api/users", require("./routes/users"));
 app.use("/config", require("./routes/config"));
+app.use("/api/projects", require("./routes/projects"));
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 

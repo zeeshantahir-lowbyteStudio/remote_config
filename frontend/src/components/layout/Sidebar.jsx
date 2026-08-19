@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Sliders, GitBranch, FlaskConical, Server, KeyRound, History, ScrollText, LogOut, Users } from "lucide-react";
+import { Sliders, GitBranch, FlaskConical, FolderKanban, Server, KeyRound, History, ScrollText, LogOut, Users } from "lucide-react";
 import { hasRole } from "../../lib/roles";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/apps", label: "Apps & API Keys", icon: KeyRound },
   { to: "/history", label: "Publish History", icon: History },
   { to: "/audit-log", label: "Audit Log", icon: ScrollText },
+  { to: "/projects", label: "Projects", icon: FolderKanban },
 ];
 
 export default function Sidebar({ user, onLogout }) {
