@@ -3,8 +3,10 @@ const { mysqlTable, int, varchar, text, boolean, timestamp, mysqlEnum, uniqueInd
 const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  googleId: varchar("google_id", { length: 255 }).notNull().unique(),
+  googleId: varchar("google_id", { length: 255 }).unique(),
   name: varchar("name", { length: 255 }),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  invitedBy: int("invited_by"),
   role: mysqlEnum("role", ["viewer", "editor", "publisher", "admin"]).notNull().default("viewer"),
   createdAt: timestamp("created_at").defaultNow(),
 });
