@@ -9,6 +9,7 @@ app.use(express.json());
 
 app.use("/auth", require("./routes/auth"));
 app.use("/api/params", require("./routes/params"));
+app.use("/api/params", require("./routes/paramConditions"));
 app.use("/api/conditions", require("./routes/conditions"));
 app.use("/api/environments", require("./routes/environments"));
 app.use("/api/apps", require("./routes/apps"));
