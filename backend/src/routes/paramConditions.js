@@ -6,7 +6,7 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 router.get("/:id/conditions", requireAuth, async (req, res) => {
-  const { id } = req.params;
+  const id = Number(req.params.id);
 
   const [configKey] = await db.select().from(configKeys).where(eq(configKeys.id, id));
   if (!configKey) return res.status(404).json({ error: "Parameter not found" });
@@ -29,7 +29,7 @@ router.get("/:id/conditions", requireAuth, async (req, res) => {
 });
 
 router.post("/:id/conditions", requireAuth, requireRole("editor"), async (req, res) => {
-  const { id } = req.params;
+  const id = Number(req.params.id);
   const { conditionId, overrideValue, priority } = req.body;
 
   if (!conditionId || overrideValue === undefined || overrideValue === null) {
@@ -39,19 +39,20 @@ router.post("/:id/conditions", requireAuth, requireRole("editor"), async (req, r
   const [configKey] = await db.select().from(configKeys).where(eq(configKeys.id, id));
   if (!configKey) return res.status(404).json({ error: "Parameter not found" });
 
-  const [condition] = await db.select().from(conditions).where(eq(conditions.id, conditionId));
+  const [condition] = await db.select().from(conditions).where(eq(conditions.id, Number(conditionId)));
   if (!condition) return res.status(404).json({ error: "Condition not found" });
+
   const [existing] = await db
     .select()
     .from(configKeyConditions)
-    .where(and(eq(configKeyConditions.configKeyId, id), eq(configKeyConditions.conditionId, conditionId)));
+    .where(and(eq(configKeyConditions.configKeyId, id), eq(configKeyConditions.conditionId, Number(conditionId))));
 
   if (existing) {
     return res.status(409).json({ error: "This condition is already attached to this parameter" });
   }
 
   const [result] = await db.insert(configKeyConditions).values({
-    configKeyId: Number(id),
+    configKeyId: id,
     conditionId: Number(conditionId),
     overrideValue: String(overrideValue),
     priority: priority ?? 0,
@@ -75,7 +76,8 @@ router.post("/:id/conditions", requireAuth, requireRole("editor"), async (req, r
 
 
 router.put("/:id/conditions/:linkId", requireAuth, requireRole("editor"), async (req, res) => {
-  const { id, linkId } = req.params;
+  const id = Number(req.params.id);
+  const linkId = Number(req.params.linkId);
   const { overrideValue, priority } = req.body;
 
   const [link] = await db
@@ -91,11 +93,12 @@ router.put("/:id/conditions/:linkId", requireAuth, requireRole("editor"), async 
 
   await db.update(configKeyConditions).set(updates).where(eq(configKeyConditions.id, linkId));
 
-  res.json({ id: Number(linkId), ...updates });
+  res.json({ id: linkId, ...updates });
 });
 
 router.delete("/:id/conditions/:linkId", requireAuth, requireRole("editor"), async (req, res) => {
-  const { id, linkId } = req.params;
+  const id = Number(req.params.id);
+  const linkId = Number(req.params.linkId);
 
   const [link] = await db
     .select({

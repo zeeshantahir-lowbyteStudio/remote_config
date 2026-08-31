@@ -86,11 +86,15 @@ router.put("/:id", requireAuth, requireRole("editor"), async (req, res) => {
 router.delete("/:id", requireAuth, requireRole("editor"), async (req, res) => {
   const { id } = req.params;
 
-  const [configKey] = await db.select().from(configKeys).where(eq(configKeys.id, id));
+  const [configKey] = await db.select().from(configKeys).where(eq(configKeys.id, Number(id)));
   if (!configKey) return res.status(404).json({ error: "Parameter not found" });
 
-  await db.delete(configValues).where(eq(configValues.configKeyId, id));
-  await db.delete(configKeys).where(eq(configKeys.id, id));
+  // Delete dependent rows first to avoid foreign key constraint errors
+  const { configKeyConditions } = require("../db/schema");
+  await db.delete(configKeyConditions).where(eq(configKeyConditions.configKeyId, Number(id)));
+  await db.delete(configValues).where(eq(configValues.configKeyId, Number(id)));
+  await db.delete(configKeys).where(eq(configKeys.id, Number(id)));
+
   await db.insert(auditLog).values({ userId: req.user.id, action: "Deleted parameter", target: configKey.key });
 
   res.json({ success: true });
