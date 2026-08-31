@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const { OAuth2Client } = require("google-auth-library");
 const { eq } = require("drizzle-orm");
 const { db } = require("../db");
@@ -52,6 +53,30 @@ router.post("/google", async (req, res) => {
     console.error(err);
     res.status(401).json({ error: "Invalid Google token" });
   }
+});
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "email and password are required" });
+  }
+
+  const [user] = await db.select().from(users).where(eq(users.email, email));
+  if (!user || !user.passwordHash) {
+    return res.status(401).json({ error: "Invalid email or password" });
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return res.status(401).json({ error: "Invalid email or password" });
+  }
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 });
 
 router.get("/me", requireAuth, async (req, res) => {

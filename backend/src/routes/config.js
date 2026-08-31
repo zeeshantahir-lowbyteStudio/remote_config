@@ -13,9 +13,12 @@ const {
   experimentEvents,
 } = require("../db/schema");
 const { requireApiKey } = require("../middleware/auth");
+const { logRequest } = require("../middleware/requestLogger");
 const { evaluateRule } = require("../lib/conditions");
 
 const router = express.Router();
+
+router.use(requireApiKey, logRequest);
 
 function bucketFor(userIdentifier, experimentId) {
   const hash = crypto.createHash("md5").update(`${userIdentifier}:${experimentId}`).digest("hex");
@@ -23,14 +26,13 @@ function bucketFor(userIdentifier, experimentId) {
   return num % 100;
 }
 
-router.get("/", requireApiKey, async (req, res) => {
+router.get("/", async (req, res) => {
   const { userId, platform, country, appVersion } = req.query;
 
   const [app] = await db.select().from(apps).where(eq(apps.apiKey, req.apiKey));
   if (!app) return res.status(401).json({ error: "Invalid API key" });
 
-  // Context available to condition rules — app is derived from the API key itself,
-  // everything else comes from what the client passes as query params
+  
   const context = {
     app: app.name,
     platform,
@@ -46,7 +48,6 @@ router.get("/", requireApiKey, async (req, res) => {
     const [val] = await db.select().from(configValues).where(eq(configValues.configKeyId, key.id));
     let finalValue = val ? val.publishedValue : null;
 
-    // ── Evaluate conditions attached to this key, in priority order ──
     const links = await db
       .select({
         overrideValue: configKeyConditions.overrideValue,
@@ -61,11 +62,10 @@ router.get("/", requireApiKey, async (req, res) => {
     for (const link of links) {
       if (evaluateRule(link.ruleExpression, context)) {
         finalValue = link.overrideValue;
-        break; // first matching condition wins, matches your priority ordering
+        break; 
       }
     }
 
-    // ── Experiment bucketing (runs after condition override, same as Firebase precedence) ──
     const exps = await db.select().from(experiments).where(eq(experiments.configKeyId, key.id));
     const runningExp = exps.find((e) => e.status === "running");
 
@@ -114,7 +114,7 @@ router.get("/", requireApiKey, async (req, res) => {
   res.json(result);
 });
 
-router.post("/event", requireApiKey, async (req, res) => {
+router.post("/event", async (req, res) => {
   const { userId, experimentId, variantId } = req.body;
   if (!userId || !experimentId || !variantId) {
     return res.status(400).json({ error: "userId, experimentId, variantId required" });

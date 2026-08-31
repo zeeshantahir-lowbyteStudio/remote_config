@@ -188,6 +188,33 @@ async function addExperiment(data) {
   await loadAuditLog();
 }
 
+  async function getParamConditions(paramId) {
+    return await apiFetch(`/api/params/${paramId}/conditions`);
+  }
+
+  async function attachCondition(paramId, conditionId, overrideValue, priority) {
+    const result = await apiFetch(`/api/params/${paramId}/conditions`, {
+      method: "POST",
+      body: JSON.stringify({ conditionId, overrideValue, priority: priority ?? 0 }),
+    });
+    await loadAuditLog();
+    return result;
+  }
+
+  async function updateConditionLink(paramId, linkId, overrideValue, priority) {
+    const result = await apiFetch(`/api/params/${paramId}/conditions/${linkId}`, {
+      method: "PUT",
+      body: JSON.stringify({ overrideValue, priority }),
+    });
+    await loadAuditLog();
+    return result;
+  }
+
+  async function detachCondition(paramId, linkId) {
+    await apiFetch(`/api/params/${paramId}/conditions/${linkId}`, { method: "DELETE" });
+    await loadAuditLog();
+  }
+
   async function setExperimentStatus(id, status) {
     await apiFetch(`/api/experiments/${id}/status`, { method: "POST", body: JSON.stringify({ status }) });
     await loadExperiments();
@@ -215,6 +242,7 @@ async function addExperiment(data) {
     addApp, regenerateAppKey, deleteApp,
     addExperiment, setExperimentStatus,
     publishChanges,
+    getParamConditions, attachCondition, updateConditionLink, detachCondition,
   };
 
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
