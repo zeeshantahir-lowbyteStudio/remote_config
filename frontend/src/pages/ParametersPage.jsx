@@ -41,51 +41,53 @@ export default function ParametersPage({ user }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <Input
           placeholder="Search parameters..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-72"
+          className="w-full sm:w-72"
         />
         {canEdit && <Button variant="secondary" onClick={openAdd}>+ Add parameter</Button>}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
-              <th className="px-4 py-3 font-medium">Parameter key</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Default value</th>
-              <th className="px-4 py-3 font-medium">Draft</th>
-              <th className="px-4 py-3 font-medium">Last updated</th>
-              {canEdit && <th className="px-4 py-3 font-medium text-right">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={canEdit ? 6 : 5} className="px-4 py-10 text-center text-gray-400">No parameters found</td></tr>
-            )}
-            {filtered.map((p) => (
-              <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3 font-mono text-gray-800">{p.key}</td>
-                <td className="px-4 py-3 text-gray-500">{p.type}</td>
-                <td className="px-4 py-3 text-gray-800">{p.draftValue}</td>
-                <td className="px-4 py-3">
-                  {p.hasDraftChange ? <Badge color="amber">Unpublished</Badge> : <Badge color="green">Published</Badge>}
-                </td>
-                <td className="px-4 py-3 text-gray-500">{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : "-"}</td>
-                {canEdit && (
-                  <td className="px-4 py-3 text-right space-x-3">
-                    <Button variant="link" onClick={() => openEdit(p)}>Edit</Button>
-                    <Button variant="danger" onClick={() => handleDelete(p)}>Delete</Button>
-                  </td>
-                )}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
+                <th className="px-4 py-3 font-medium">Parameter key</th>
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Default value</th>
+                <th className="px-4 py-3 font-medium">Draft</th>
+                <th className="px-4 py-3 font-medium">Last updated</th>
+                {canEdit && <th className="px-4 py-3 font-medium text-right">Actions</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr><td colSpan={canEdit ? 6 : 5} className="px-4 py-10 text-center text-gray-400">No parameters found</td></tr>
+              )}
+              {filtered.map((p) => (
+                <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono text-gray-800 break-all">{p.key}</td>
+                  <td className="px-4 py-3 text-gray-500">{p.type}</td>
+                  <td className="px-4 py-3 text-gray-800 max-w-[160px] truncate">{p.draftValue}</td>
+                  <td className="px-4 py-3">
+                    {p.hasDraftChange ? <Badge color="amber">Unpublished</Badge> : <Badge color="green">Published</Badge>}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : "-"}</td>
+                  {canEdit && (
+                    <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
+                      <Button variant="link" onClick={() => openEdit(p)}>Edit</Button>
+                      <Button variant="danger" onClick={() => handleDelete(p)}>Delete</Button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {isModalOpen && (

@@ -40,11 +40,9 @@ export default function ExperimentsPage() {
         )}
         {experiments.map((exp) => (
           <div key={exp.id} className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="text-sm font-semibold">{exp.name}</div>
-              </div>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+              <div className="text-sm font-semibold">{exp.name}</div>
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge color={statusColor[exp.status]}>{exp.status}</Badge>
                 {exp.status === "draft" && (
                   <Button variant="link" onClick={() => setExperimentStatus(exp.id, "running")}>Start</Button>
@@ -60,30 +58,32 @@ export default function ExperimentsPage() {
                 )}
               </div>
             </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100">
-                  <th className="py-2 font-medium">Variant</th>
-                  <th className="py-2 font-medium">Value</th>
-                  <th className="py-2 font-medium">Split</th>
-                  <th className="py-2 font-medium">Users</th>
-                  <th className="py-2 font-medium">Conversions</th>
-                  <th className="py-2 font-medium">Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {exp.variants.map((v) => (
-                  <tr key={v.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2 font-medium">{v.name}</td>
-                    <td className="py-2 font-mono text-gray-600">{v.value}</td>
-                    <td className="py-2">{v.splitPercent}%</td>
-                    <td className="py-2">{v.users}</td>
-                    <td className="py-2">{v.conversions}</td>
-                    <td className="py-2 font-medium text-indigo-700">{conversionRate(v)}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
+                <thead>
+                  <tr className="text-left text-gray-500 text-xs uppercase tracking-wide border-b border-gray-100">
+                    <th className="py-2 font-medium">Variant</th>
+                    <th className="py-2 font-medium">Value</th>
+                    <th className="py-2 font-medium">Split</th>
+                    <th className="py-2 font-medium">Users</th>
+                    <th className="py-2 font-medium">Conversions</th>
+                    <th className="py-2 font-medium">Rate</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {exp.variants.map((v) => (
+                    <tr key={v.id} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2 font-medium whitespace-nowrap">{v.name}</td>
+                      <td className="py-2 font-mono text-gray-600">{v.value}</td>
+                      <td className="py-2 whitespace-nowrap">{v.splitPercent}%</td>
+                      <td className="py-2">{v.users}</td>
+                      <td className="py-2">{v.conversions}</td>
+                      <td className="py-2 font-medium text-indigo-700 whitespace-nowrap">{conversionRate(v)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))}
       </div>

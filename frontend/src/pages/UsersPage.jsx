@@ -160,46 +160,48 @@ export default function UsersPage({ currentUser }) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-gray-400">Loading…</td></tr>
-            )}
-            {!loading && users.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-gray-400">No users found</td></tr>
-            )}
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-gray-100 last:border-0">
-                <td className="px-4 py-3 font-medium">{u.name || "-"}</td>
-                <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                <td className="px-4 py-3">
-                  {u.id === currentUser.id ? (
-                    <Badge color={roleColor[u.role]}>{u.role} (you)</Badge>
-                  ) : isAdmin ? (
-                    <Select
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                      className="w-36"
-                    >
-                      {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                    </Select>
-                  ) : (
-                    <Badge color={roleColor[u.role]}>{u.role}</Badge>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[520px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Role</th>
+                <th className="px-4 py-3 font-medium">Joined</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={4} className="px-4 py-10 text-center text-gray-400">Loading…</td></tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr><td colSpan={4} className="px-4 py-10 text-center text-gray-400">No users found</td></tr>
+              )}
+              {users.map((u) => (
+                <tr key={u.id} className="border-b border-gray-100 last:border-0">
+                  <td className="px-4 py-3 font-medium whitespace-nowrap">{u.name || "-"}</td>
+                  <td className="px-4 py-3 text-gray-600 break-all">{u.email}</td>
+                  <td className="px-4 py-3">
+                    {u.id === currentUser.id ? (
+                      <Badge color={roleColor[u.role]}>{u.role} (you)</Badge>
+                    ) : isAdmin ? (
+                      <Select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        className="w-32"
+                      >
+                        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </Select>
+                    ) : (
+                      <Badge color={roleColor[u.role]}>{u.role}</Badge>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{new Date(u.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {showInvite && (
         <InviteModal

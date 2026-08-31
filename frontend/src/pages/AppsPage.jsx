@@ -46,23 +46,23 @@ export default function AppsPage({ user }) {
           <div className="px-4 py-10 text-center text-gray-400 text-sm">No apps yet</div>
         )}
         {apps.map((app) => (
-          <div key={app.id} className="px-4 py-3 flex items-center justify-between">
-            <div>
+          <div key={app.id} className="px-4 py-3 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <div className="text-sm font-medium">{app.name}</div>
-              <div className="flex items-center gap-2 mt-1">
-                <code className="text-xs bg-gray-50 px-2 py-1 rounded font-mono">
+              <div className="flex items-center gap-2 mt-1 min-w-0">
+                <code className="text-xs bg-gray-50 px-2 py-1 rounded font-mono block truncate max-w-[180px] sm:max-w-xs">
                   {visibleKeys[app.id] ? app.apiKey : "•".repeat(app.apiKey.length)}
                 </code>
-                <button onClick={() => toggleVisible(app.id)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => toggleVisible(app.id)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
                   {visibleKeys[app.id] ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
             {canManage && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-shrink-0">
                 <button
                   onClick={() => handleRegenerate(app)}
-                  className="text-xs text-gray-500 hover:text-indigo-600 flex items-center gap-1"
+                  className="text-xs text-gray-500 hover:text-indigo-600 flex items-center gap-1 whitespace-nowrap"
                 >
                   <RefreshCw size={12} /> Regenerate
                 </button>

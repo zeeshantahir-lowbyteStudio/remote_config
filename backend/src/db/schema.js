@@ -34,6 +34,7 @@ const apps = mysqlTable("apps", {
   name: varchar("name", { length: 255 }).notNull(),
   apiKey: varchar("api_key", { length: 100 }).notNull().unique(),
   environmentId: int("environment_id").notNull().references(() => environments.id),
+  logRetentionDays: int("log_retention_days").notNull().default(90),
 });
 
 const configKeys = mysqlTable("config_keys", {
@@ -108,8 +109,19 @@ const auditLog = mysqlTable("audit_log", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+const requestLogs = mysqlTable("request_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  appId: int("app_id").notNull().references(() => apps.id),
+  action: varchar("action", { length: 50 }).notNull().default("config_fetch"), // config_fetch | event_track
+  userId: varchar("user_id", { length: 255 }),         // the end-user userId from query param
+  platform: varchar("platform", { length: 50 }),
+  country: varchar("country", { length: 10 }),
+  statusCode: int("status_code").notNull().default(200),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 module.exports = {
   users, projects, environments, apps, configKeys, configValues, conditions,
   configKeyConditions, experiments, experimentVariants, experimentEvents,
-  publishHistory, auditLog,
+  publishHistory, auditLog, requestLogs,
 };

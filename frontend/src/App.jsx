@@ -13,6 +13,7 @@ import AuditLogPage from "./pages/AuditLogPage";
 import UsersPage from "./pages/UsersPage";
 import { hasRole } from "./lib/roles";
 import ProjectsPage from "./pages/ProjectsPage";
+import TrafficPage from "./pages/TrafficPage";
 
 function getStoredUser() {
   const raw = localStorage.getItem("rc_user");
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/history" element={<PublishHistoryPage />} />
             <Route path="/audit-log" element={<AuditLogPage />} />
             <Route path="/projects" element={<ProjectsPage user={user} />} />
+            <Route path="/traffic" element={<TrafficPage user={user} />} />
             <Route
               path="/users"
               element={hasRole(user, "admin") ? <UsersPage currentUser={user} /> : <Navigate to="/" replace />}
