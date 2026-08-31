@@ -55,5 +55,5 @@ function startLogCleanupCron() {
     }
   }
   cleanup();
-  setInterval(cleanup, 60 * 60 * 1000);
+  setInterval(cleanup, 24 * 60 * 60 * 1000);
 }
