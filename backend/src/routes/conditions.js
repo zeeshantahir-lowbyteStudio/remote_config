@@ -61,6 +61,10 @@ router.delete("/:id", requireAuth, requireRole("editor"), async (req, res) => {
   const [condition] = await db.select().from(conditions).where(eq(conditions.id, id));
   if (!condition) return res.status(404).json({ error: "Condition not found" });
 
+  // Delete all param links first to avoid foreign key constraint error
+  const { configKeyConditions } = require("../db/schema");
+  await db.delete(configKeyConditions).where(eq(configKeyConditions.conditionId, Number(id)));
+
   await db.delete(conditions).where(eq(conditions.id, id));
   await db.insert(auditLog).values({ userId: req.user.id, action: "Deleted condition", target: condition.name });
   res.json({ success: true });

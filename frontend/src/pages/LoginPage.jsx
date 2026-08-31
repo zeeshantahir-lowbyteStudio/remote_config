@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 export default function LoginPage({ onLogin }) {
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
@@ -12,7 +14,7 @@ export default function LoginPage({ onLogin }) {
   async function handleGoogleSuccess(credentialResponse) {
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/auth/google", {
+      const res = await fetch(`${API_BASE}/auth/google`, {
 
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,7 +46,7 @@ export default function LoginPage({ onLogin }) {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),

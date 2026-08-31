@@ -61,12 +61,12 @@ export default function ParametersPage({ user }) {
                 <th className="px-4 py-3 font-medium">Default value</th>
                 <th className="px-4 py-3 font-medium">Draft</th>
                 <th className="px-4 py-3 font-medium">Last updated</th>
-                {canEdit && <th className="px-4 py-3 font-medium text-right">Actions</th>}
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={canEdit ? 6 : 5} className="px-4 py-10 text-center text-gray-400">No parameters found</td></tr>
+                <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No parameters found</td></tr>
               )}
               {filtered.map((p) => (
                 <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -77,12 +77,14 @@ export default function ParametersPage({ user }) {
                     {p.hasDraftChange ? <Badge color="amber">Unpublished</Badge> : <Badge color="green">Published</Badge>}
                   </td>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : "-"}</td>
-                  {canEdit && (
-                    <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
-                      <Button variant="link" onClick={() => openEdit(p)}>Edit</Button>
+                  <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
+                    <Button variant="link" onClick={() => openEdit(p)}>
+                      {canEdit ? "Edit" : "View"}
+                    </Button>
+                    {canEdit && (
                       <Button variant="danger" onClick={() => handleDelete(p)}>Delete</Button>
-                    </td>
-                  )}
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -178,90 +180,104 @@ function ConditionsPanel({ param, canEdit }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
-              <th className="px-3 py-2 font-medium">Condition</th>
-              <th className="px-3 py-2 font-medium">Rule</th>
-              <th className="px-3 py-2 font-medium">Override value</th>
-              <th className="px-3 py-2 font-medium w-16">Priority</th>
-              {canEdit && <th className="px-3 py-2 font-medium text-right">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {loadingLinks && (
-              <tr><td colSpan={canEdit ? 5 : 4} className="px-3 py-6 text-center text-gray-400 text-xs">Loading…</td></tr>
-            )}
-            {!loadingLinks && links.length === 0 && (
-              <tr><td colSpan={canEdit ? 5 : 4} className="px-3 py-6 text-center text-gray-400 text-xs">No conditions attached yet</td></tr>
-            )}
-            {links.map((link) => (
-              <tr key={link.id} className="border-b border-gray-100 last:border-0">
-                <td className="px-3 py-2 font-medium">{link.conditionName}</td>
-                <td className="px-3 py-2 font-mono text-xs text-gray-500">{link.ruleExpression}</td>
-                <td className="px-3 py-2">
-                  {editingLinkId === link.id ? (
-                    <input
-                      className="border border-gray-300 rounded px-2 py-1 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      value={editOverride}
-                      onChange={(e) => setEditOverride(e.target.value)}
-                    />
-                  ) : (
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">{link.overrideValue}</span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  {editingLinkId === link.id ? (
-                    <input
-                      type="number"
-                      className="border border-gray-300 rounded px-2 py-1 text-xs w-14 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      value={editPriority}
-                      onChange={(e) => setEditPriority(e.target.value)}
-                    />
-                  ) : (
-                    <span className="text-xs text-gray-500">{link.priority}</span>
-                  )}
-                </td>
+    <div className="space-y-3">
+      {/* Attached conditions list */}
+      {loadingLinks && (
+        <p className="text-xs text-gray-400 py-4 text-center">Loading…</p>
+      )}
+      {!loadingLinks && links.length === 0 && (
+        <p className="text-xs text-gray-400 py-4 text-center border border-gray-200 rounded-lg">No conditions attached yet</p>
+      )}
+      {links.map((link) => (
+        <div key={link.id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+          {editingLinkId === link.id ? (
+            /* Edit mode */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-gray-700">{link.conditionName}</span>
+                <span className="text-xs font-mono text-gray-400">{link.ruleExpression}</span>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <div className="flex-1 min-w-24">
+                  <label className="block text-xs text-gray-500 mb-1">Override value</label>
+                  <input
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    value={editOverride}
+                    onChange={(e) => setEditOverride(e.target.value)}
+                  />
+                </div>
+                <div className="w-20">
+                  <label className="block text-xs text-gray-500 mb-1">Priority</label>
+                  <input
+                    type="number"
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="secondary" onClick={() => setEditingLinkId(null)}>Cancel</Button>
+                <Button onClick={() => handleSaveEdit(link.id)}>Save</Button>
+              </div>
+            </div>
+          ) : (
+            /* View mode */
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-xs font-semibold text-gray-800">{link.conditionName}</p>
+                <p className="text-xs font-mono text-gray-400">{link.ruleExpression}</p>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Override</p>
+                  <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">{link.overrideValue}</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Priority</p>
+                  <p className="text-xs font-medium text-gray-700">{link.priority}</p>
+                </div>
                 {canEdit && (
-                  <td className="px-3 py-2 text-right space-x-2">
-                    {editingLinkId === link.id ? (
-                      <>
-                        <Button variant="link" onClick={() => handleSaveEdit(link.id)}>Save</Button>
-                        <Button variant="link" onClick={() => setEditingLinkId(null)}>Cancel</Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button variant="link" onClick={() => startEdit(link)}>Edit</Button>
-                        <Button variant="danger" onClick={() => handleDetach(link.id)}>Remove</Button>
-                      </>
-                    )}
-                  </td>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => startEdit(link)}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDetach(link.id)}
+                      className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Attach new condition form */}
       {canEdit && (
         <form onSubmit={handleAttach} className="border border-dashed border-gray-300 rounded-lg p-3 space-y-3">
           <p className="text-xs font-medium text-gray-600">Attach a condition</p>
-          <div className="flex gap-2 flex-wrap">
-            <div className="flex-1 min-w-36">
-              <label className="block text-xs text-gray-500 mb-1">Condition</label>
-              <select
-                value={selectedConditionId}
-                onChange={(e) => setSelectedConditionId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Select condition…</option>
-                {available.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} — {c.ruleExpression}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1 min-w-28">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Condition</label>
+            <select
+              value={selectedConditionId}
+              onChange={(e) => setSelectedConditionId(e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Select condition…</option>
+              {available.map((c) => (
+                <option key={c.id} value={c.id}>{c.name} — {c.ruleExpression}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-1">Override value</label>
               <input
                 type="text"
@@ -280,21 +296,19 @@ function ConditionsPanel({ param, canEdit }) {
                 className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-            <div className="flex items-end">
-              <Button type="submit" disabled={adding}>
-                {adding ? "Attaching…" : "Attach"}
-              </Button>
-            </div>
           </div>
-          {available.length === 0 && !selectedConditionId && (
-            <p className="text-xs text-gray-400">All conditions in this environment are already attached, or none exist yet.</p>
+          {available.length === 0 && (
+            <p className="text-xs text-gray-400">All conditions are already attached or none exist yet.</p>
           )}
           {addError && <p className="text-xs text-red-600">{addError}</p>}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={adding}>
+              {adding ? "Attaching…" : "Attach"}
+            </Button>
+          </div>
         </form>
       )}
-      <p className="text-xs text-gray-400">
-        Lower priority number = evaluated first. First matching condition wins and overrides the default value.
-      </p>
+      <p className="text-xs text-gray-400">Lower priority number = evaluated first. First match wins.</p>
     </div>
   );
 }

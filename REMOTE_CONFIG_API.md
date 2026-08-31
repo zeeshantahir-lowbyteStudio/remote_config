@@ -27,7 +27,7 @@ The backend resolves: `API Key → App → Environment → all published Paramet
 App routes use `X-API-Key` only. No JWT, no user login required.
 
 ```
-X-API-Key: rc_live_a1b2c3d4e5f6g7h8
+X-API-Key:
 ```
 
 Get this key from the **Apps** page in the dashboard.
